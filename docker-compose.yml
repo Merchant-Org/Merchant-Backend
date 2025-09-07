@@ -3,18 +3,29 @@ services:
     image: postgres:17
     restart: always
     environment:
-      POSTGRES_USER: merchant
-      POSTGRES_PASSWORD: merchant
-      POSTGRES_DB: merchant
+      POSTGRES_USER: ${DB_USER:-merchant}
+      POSTGRES_PASSWORD: ${DB_PASS:-merchant}
+      POSTGRES_DB: ${DB_PASS:-merchant}
     ports:
       - "5432:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-merchant}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   redis:
     image: "redis:8"
     restart: always
     ports:
       - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
 volumes:
   db_data:
