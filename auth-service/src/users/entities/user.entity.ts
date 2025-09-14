@@ -1,11 +1,12 @@
-import { BaseEntity, Entity, PrimaryKey, Property } from '@mikro-orm/core';
+import { BaseEntity, Entity, Enum, PrimaryKey, Property } from '@mikro-orm/core';
 import * as bcrypt from 'bcrypt';
+import { UserStatus } from './user-status.enum';
 
 
 @Entity()
 export class User extends BaseEntity {
   @PrimaryKey()
-  id: string;
+  id: number;
 
   @Property()
   firstName: string;
@@ -27,6 +28,9 @@ export class User extends BaseEntity {
 
   @Property({ hidden: true })
   password: string;
+
+  @Enum(() => UserStatus)
+  status: UserStatus = UserStatus.Active
 
   @Property()
   createdAt: Date = new Date;
