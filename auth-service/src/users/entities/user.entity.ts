@@ -1,5 +1,4 @@
 import { BaseEntity, Entity, Enum, PrimaryKey, Property } from '@mikro-orm/core';
-import * as bcrypt from 'bcrypt';
 import { UserStatus } from './user-status.enum';
 
 
@@ -39,12 +38,4 @@ export class User extends BaseEntity {
     onUpdate: () => new Date(),
   })
   updatedAt: Date = new Date;
-
-  async setPassword(raw: string) {
-    this.password = await bcrypt.hash(raw, 10);
-  }
-
-  async checkPassword(raw: string) {
-    return bcrypt.compare(raw, this.password);
-  }
 }

@@ -4,6 +4,8 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { User } from './entities/user.entity';
 import { EntityRepository } from '@mikro-orm/core';
+import * as bcrypt from 'bcrypt';
+
 
 @Injectable()
 export class UsersService {
@@ -12,9 +14,14 @@ export class UsersService {
     private readonly userRepo: EntityRepository<User>
   ) {}
 
+  async hashPassword(raw: string) {
+    return bcrypt.hash(raw, 10);
+  }
+
   async create(createUserDto: CreateUserDto) {
     const user = this.userRepo.create(createUserDto, { partial: true });
-    this.userRepo.getEntityManager().flush();
+    user.password = await this.hashPassword(createUserDto.password);
+    await this.userRepo.getEntityManager().flush();
     return user;
   }
 
@@ -27,8 +34,10 @@ export class UsersService {
   }
 
   async update(id: number, updateUserDto: UpdateUserDto) {
-    const user = this.userRepo.getReference(id);
-    this.userRepo.assign(user, updateUserDto);
+    const user = await this.userRepo.findOneOrFail(id);
+    this.userRepo.assign({ id }, updateUserDto);
+    if (updateUserDto.password) user.password = await this.hashPassword(updateUserDto.password);
+    await this.userRepo.getEntityManager().flush();
     return user;
   }
 
