@@ -5,7 +5,6 @@ import { User } from './entities/user.entity';
 import { getRepositoryToken } from '@mikro-orm/nestjs';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UserStatus } from './entities/user-status.enum';
-import { NotFoundException } from '@nestjs/common';
 import { UpdateUserDto } from './dto/update-user.dto';
 
 type MockRepo<T extends object> = Partial<
