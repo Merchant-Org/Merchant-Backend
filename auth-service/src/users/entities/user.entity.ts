@@ -18,7 +18,7 @@ export class User extends BaseEntity {
   @Property()
   lastName: string;
 
-  @Property()
+  @Property({ unique: true})
   username: string;
 
   @Property({ nullable: true })
