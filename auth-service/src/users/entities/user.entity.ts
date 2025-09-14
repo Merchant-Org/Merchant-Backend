@@ -1,6 +1,11 @@
-import { BaseEntity, Entity, Enum, PrimaryKey, Property } from '@mikro-orm/core';
+import {
+  BaseEntity,
+  Entity,
+  Enum,
+  PrimaryKey,
+  Property,
+} from '@mikro-orm/core';
 import { UserStatus } from './user-status.enum';
-
 
 @Entity()
 export class User extends BaseEntity {
@@ -29,13 +34,13 @@ export class User extends BaseEntity {
   password: string;
 
   @Enum(() => UserStatus)
-  status: UserStatus = UserStatus.Active
+  status: UserStatus = UserStatus.Active;
 
   @Property()
-  createdAt: Date = new Date;
+  createdAt: Date = new Date();
 
   @Property({
     onUpdate: () => new Date(),
   })
-  updatedAt: Date = new Date;
+  updatedAt: Date = new Date();
 }

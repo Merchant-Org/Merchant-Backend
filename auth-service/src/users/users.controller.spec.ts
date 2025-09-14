@@ -6,13 +6,12 @@ import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 
-
 const mockUsersService = {
   create: jest.fn(),
   findAll: jest.fn(),
   findOne: jest.fn(),
   update: jest.fn(),
-  remove: jest.fn()
+  remove: jest.fn(),
 };
 
 const mockUser: User = {
@@ -26,7 +25,7 @@ const mockUser: User = {
   createdAt: new Date(),
   updatedAt: new Date(),
   hashPassword: jest.fn().mockResolvedValue(undefined),
-  checkPassword: jest.fn().mockResolvedValue(true)
+  checkPassword: jest.fn().mockResolvedValue(true),
 } as unknown as User;
 
 describe('UsersController', () => {
@@ -36,10 +35,12 @@ describe('UsersController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [UsersController],
-      providers: [{
-        provide: UsersService,
-        useValue: mockUsersService
-      }],
+      providers: [
+        {
+          provide: UsersService,
+          useValue: mockUsersService,
+        },
+      ],
     }).compile();
 
     controller = module.get<UsersController>(UsersController);
@@ -62,7 +63,7 @@ describe('UsersController', () => {
         username: 'testuser',
         email: 'test@example.com',
         password: 'password123',
-        status: UserStatus.Active
+        status: UserStatus.Active,
       };
       mockUsersService.create.mockResolvedValue(mockUser);
 

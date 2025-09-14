@@ -1,6 +1,13 @@
-import { IsEmail, IsEnum, IsOptional, IsPhoneNumber, IsString, IsStrongPassword, MinLength } from "class-validator";
-import { UserStatus } from "../entities/user-status.enum";
-
+import {
+  IsEmail,
+  IsEnum,
+  IsOptional,
+  IsPhoneNumber,
+  IsString,
+  IsStrongPassword,
+  MinLength,
+} from 'class-validator';
+import { UserStatus } from '../entities/user-status.enum';
 
 export class CreateUserDto {
   @MinLength(3)
@@ -25,5 +32,5 @@ export class CreateUserDto {
 
   @IsEnum(UserStatus)
   @IsOptional()
-  status: UserStatus = UserStatus.Active
+  status: UserStatus = UserStatus.Active;
 }

@@ -8,8 +8,9 @@ import { UserStatus } from './entities/user-status.enum';
 import { NotFoundException } from '@nestjs/common';
 import { UpdateUserDto } from './dto/update-user.dto';
 
-
-type MockRepo<T extends object> = Partial<Record<keyof EntityRepository<T>, jest.Mock>>;
+type MockRepo<T extends object> = Partial<
+  Record<keyof EntityRepository<T>, jest.Mock>
+>;
 
 const mockUserRepo = (): MockRepo<User> => ({
   create: jest.fn(),
@@ -37,7 +38,7 @@ describe('UsersService', () => {
     password: 'hashedpassword',
     status: UserStatus.Active,
     createdAt: new Date(),
-    updatedAt: new Date()
+    updatedAt: new Date(),
   } as User;
 
   beforeEach(async () => {
@@ -73,7 +74,7 @@ describe('UsersService', () => {
         username: 'moe',
         email: 'foo@bar.com',
         password: 'password123',
-        status: UserStatus.Active
+        status: UserStatus.Active,
       };
 
       userRepository.create!.mockReturnValue(new User());
@@ -81,7 +82,9 @@ describe('UsersService', () => {
 
       const user = await service.create(createUserDto);
 
-      expect(userRepository.create).toHaveBeenCalledWith(createUserDto, { partial: true });
+      expect(userRepository.create).toHaveBeenCalledWith(createUserDto, {
+        partial: true,
+      });
       expect(service.hashPassword).toHaveBeenCalledWith(createUserDto.password);
       expect(user.password).toBe(hashedPassword);
       expect(userRepository.getEntityManager!().flush).toHaveBeenCalled();
@@ -114,28 +117,31 @@ describe('UsersService', () => {
   describe('update', () => {
     it('should update and return a user', async () => {
       const updateUserDto: UpdateUserDto = { username: 'new_moe' };
-      
+
       userRepository.findOneOrFail!.mockResolvedValue(mockUser);
       userRepository.getEntityManager!().flush.mockResolvedValue(undefined);
 
       const result = await service.update(1, updateUserDto);
 
       expect(userRepository.findOneOrFail).toHaveBeenCalledWith(1);
-      expect(userRepository.assign).toHaveBeenCalledWith({ id: 1 }, updateUserDto);
+      expect(userRepository.assign).toHaveBeenCalledWith(
+        { id: 1 },
+        updateUserDto,
+      );
       expect(userRepository.getEntityManager!().flush).toHaveBeenCalled();
       expect(result).toEqual(mockUser);
     });
 
     it('should hash password if provided', async () => {
-        const updateUserDto: UpdateUserDto = { password: 'newpassword' };
-        
-        userRepository.findOneOrFail!.mockResolvedValue(mockUser);
-        userRepository.getEntityManager!().flush.mockResolvedValue(undefined);
+      const updateUserDto: UpdateUserDto = { password: 'newpassword' };
 
-        await service.update(1, updateUserDto);
+      userRepository.findOneOrFail!.mockResolvedValue(mockUser);
+      userRepository.getEntityManager!().flush.mockResolvedValue(undefined);
 
-        expect(service.hashPassword).toHaveBeenCalledWith(updateUserDto.password);
-        expect(mockUser.password).toBe(hashedPassword);
+      await service.update(1, updateUserDto);
+
+      expect(service.hashPassword).toHaveBeenCalledWith(updateUserDto.password);
+      expect(mockUser.password).toBe(hashedPassword);
     });
   });
 

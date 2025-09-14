@@ -6,12 +6,11 @@ import { User } from './entities/user.entity';
 import { EntityRepository } from '@mikro-orm/core';
 import * as bcrypt from 'bcrypt';
 
-
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
-    private readonly userRepo: EntityRepository<User>
+    private readonly userRepo: EntityRepository<User>,
   ) {}
 
   async hashPassword(raw: string) {
@@ -36,7 +35,8 @@ export class UsersService {
   async update(id: number, updateUserDto: UpdateUserDto) {
     const user = await this.userRepo.findOneOrFail(id);
     this.userRepo.assign({ id }, updateUserDto);
-    if (updateUserDto.password) user.password = await this.hashPassword(updateUserDto.password);
+    if (updateUserDto.password)
+      user.password = await this.hashPassword(updateUserDto.password);
     await this.userRepo.getEntityManager().flush();
     return user;
   }
