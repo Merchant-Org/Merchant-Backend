@@ -71,7 +71,10 @@ export class UsersService {
   }
 
   async remove(id: number) {
-    const user = this.userRepo.getReference(id);
+    const user = await this.userRepo.findOneOrFail(id);
+    if (user.avatarUrl) this.fileStorageService.deleteFile({
+      filePath: user.avatarUrl
+    });
     return this.userRepo.nativeDelete(user);
   }
 }

@@ -6,6 +6,8 @@ import { getRepositoryToken } from '@mikro-orm/nestjs';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UserStatus } from './entities/user-status.enum';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { FileStorageService } from '@getlarge/nestjs-tools-file-storage';
+
 
 type MockRepo<T extends object> = Partial<
   Record<keyof EntityRepository<T>, jest.Mock>
@@ -22,9 +24,15 @@ const mockUserRepo = (): MockRepo<User> => ({
   nativeDelete: jest.fn(),
 });
 
+const mockFileStorageService = {
+  uploadFile: jest.fn(),
+  deleteFile: jest.fn(),
+};
+
 describe('UsersService', () => {
   let service: UsersService;
   let userRepository: MockRepo<User>;
+  let fileStorageService: FileStorageService;
 
   const hashedPassword = 'hashedpassword';
 
@@ -40,6 +48,14 @@ describe('UsersService', () => {
     updatedAt: new Date(),
   } as User;
 
+  const mockAvatarFile: Express.Multer.File = {
+    fieldname: 'avatar',
+    originalname: 'avatar.jpg',
+    mimetype: 'image/jpeg',
+    buffer: Buffer.from('test file'),
+    size: 12345
+  } as Express.Multer.File;
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -48,11 +64,16 @@ describe('UsersService', () => {
           provide: getRepositoryToken(User),
           useValue: mockUserRepo(),
         },
+        {
+          provide: FileStorageService,
+          useValue: mockFileStorageService
+        }
       ],
     }).compile();
 
     service = module.get<UsersService>(UsersService);
     userRepository = module.get(getRepositoryToken(User));
+    fileStorageService = module.get<FileStorageService>(FileStorageService);
 
     jest.spyOn(service, 'hashPassword').mockResolvedValue(hashedPassword);
   });
@@ -66,16 +87,16 @@ describe('UsersService', () => {
   });
 
   describe('create', () => {
-    it('should create a user and hash the password', async () => {
-      const createUserDto: CreateUserDto = {
-        firstName: 'foo',
-        lastName: 'bar',
-        username: 'moe',
-        email: 'foo@bar.com',
-        password: 'password123',
-        status: UserStatus.Active,
-      };
+    const createUserDto: CreateUserDto = {
+      firstName: 'foo',
+      lastName: 'bar',
+      username: 'moe',
+      email: 'foo@bar.com',
+      password: 'password123',
+      status: UserStatus.Active,
+    };
 
+    it('should create a user and hash the password', async () => {
       userRepository.create!.mockReturnValue(new User());
       userRepository.getEntityManager!().flush.mockResolvedValue(undefined);
 
@@ -87,6 +108,18 @@ describe('UsersService', () => {
       expect(service.hashPassword).toHaveBeenCalledWith(createUserDto.password);
       expect(user.password).toBe(hashedPassword);
       expect(userRepository.getEntityManager!().flush).toHaveBeenCalled();
+    });
+
+    it('should upload an avatar if provided on create', async () => {
+      const user = new User();
+      userRepository.create!.mockReturnValue(user);
+      userRepository.getEntityManager!().flush.mockResolvedValue(undefined);
+
+      const result = await service.create(createUserDto, mockAvatarFile);
+
+      expect(fileStorageService.uploadFile).toHaveBeenCalled();
+      expect(result.avatarUrl).toBeDefined();
+      expect(result.avatarUrl).toContain('avatar/');
     });
   });
 
@@ -114,9 +147,9 @@ describe('UsersService', () => {
   });
 
   describe('update', () => {
-    it('should update and return a user', async () => {
-      const updateUserDto: UpdateUserDto = { username: 'new_moe' };
+    const updateUserDto: UpdateUserDto = { username: 'new_moe' };
 
+    it('should update and return a user', async () => {
       userRepository.findOneOrFail!.mockResolvedValue(mockUser);
       userRepository.getEntityManager!().flush.mockResolvedValue(undefined);
 
@@ -124,7 +157,7 @@ describe('UsersService', () => {
 
       expect(userRepository.findOneOrFail).toHaveBeenCalledWith(1);
       expect(userRepository.assign).toHaveBeenCalledWith(
-        { id: 1 },
+        mockUser,
         updateUserDto,
       );
       expect(userRepository.getEntityManager!().flush).toHaveBeenCalled();
@@ -142,18 +175,61 @@ describe('UsersService', () => {
       expect(service.hashPassword).toHaveBeenCalledWith(updateUserDto.password);
       expect(mockUser.password).toBe(hashedPassword);
     });
+
+    it('should upload a new avatar on update', async () => {
+      const userWithoutAvatar = { ...mockUser, avatarUrl: undefined };
+      userRepository.findOneOrFail!.mockResolvedValue(userWithoutAvatar);
+      userRepository.getEntityManager!().flush.mockResolvedValue(undefined);
+
+      const result = await service.update(1, updateUserDto, mockAvatarFile);
+
+      expect(fileStorageService.uploadFile).toHaveBeenCalled();
+      expect(result.avatarUrl).toBeDefined();
+      expect(result.avatarUrl).toContain('avatar/');
+    });
+
+    it('should overwrite an existing avatar on update', async () => {
+      const existingAvatarUrl = 'avatar/existing-file.jpg';
+      const userWithAvatar = { ...mockUser, avatarUrl: existingAvatarUrl };
+      userRepository.findOneOrFail!.mockResolvedValue(userWithAvatar);
+      userRepository.getEntityManager!().flush.mockResolvedValue(undefined);
+
+      await service.update(1, updateUserDto, mockAvatarFile);
+
+      expect(fileStorageService.uploadFile).toHaveBeenCalledWith({
+        content: mockAvatarFile.buffer,
+        filePath: existingAvatarUrl,
+      });
+    });
   });
 
   describe('remove', () => {
-    it('should remove a user', async () => {
-      const userRef = { id: 1 };
-      userRepository.getReference!.mockReturnValue(userRef as User);
+    it('should remove a user and delete their avatar', async () => {
+      const avatarUrl = 'avatar/some-file.jpg';
+      const userWithAvatar = { ...mockUser, avatarUrl };
+
+      userRepository.findOneOrFail!.mockResolvedValue(userWithAvatar);
       userRepository.nativeDelete!.mockResolvedValue(1);
 
       await service.remove(1);
 
-      expect(userRepository.getReference).toHaveBeenCalledWith(1);
-      expect(userRepository.nativeDelete).toHaveBeenCalledWith(userRef);
+      expect(userRepository.findOneOrFail).toHaveBeenCalledWith(1);
+      expect(fileStorageService.deleteFile).toHaveBeenCalledWith({
+        filePath: avatarUrl,
+      });
+      expect(userRepository.nativeDelete).toHaveBeenCalledWith(userWithAvatar);
+    });
+
+    it('should remove a user without an avatar', async () => {
+      const userWithoutAvatar = { ...mockUser, avatarUrl: undefined };
+      userRepository.findOneOrFail!.mockResolvedValue(userWithoutAvatar);
+      userRepository.nativeDelete!.mockResolvedValue(1);
+
+      await service.remove(1);
+
+      expect(userRepository.findOneOrFail).toHaveBeenCalledWith(1);
+      expect(fileStorageService.deleteFile).not.toHaveBeenCalled();
+      expect(userRepository.nativeDelete).toHaveBeenCalledWith(userWithoutAvatar);
     });
   });
 });
