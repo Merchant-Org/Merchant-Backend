@@ -1,5 +1,0 @@
-{
-  "dependencies": {
-    "@getlarge/nestjs-tools-file-storage": "^1.4.2"
-  }
-}
