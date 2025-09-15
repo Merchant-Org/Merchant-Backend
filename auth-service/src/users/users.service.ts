@@ -1,26 +1,44 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { User } from './entities/user.entity';
 import { EntityRepository } from '@mikro-orm/core';
 import * as bcrypt from 'bcrypt';
+import { FileStorageService } from '@getlarge/nestjs-tools-file-storage';
+import { extname } from 'path';
+
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly userRepo: EntityRepository<User>,
+
+    @Inject(FileStorageService)
+    private readonly fileStorageService: FileStorageService
   ) {}
 
   async hashPassword(raw: string) {
     return bcrypt.hash(raw, 10);
   }
 
-  async create(createUserDto: CreateUserDto) {
+  async create(createUserDto: CreateUserDto, avatar?: Express.Multer.File) {
     const user = this.userRepo.create(createUserDto, { partial: true });
     user.password = await this.hashPassword(createUserDto.password);
+
+    if (avatar) {
+      const filePath = `avatar/${Date.now()}-${Math.round(Math.random() * 1e9)}.${extname(avatar.originalname)}`;
+      this.fileStorageService.uploadFile({
+        content: avatar.buffer,
+        filePath: filePath
+      });
+
+      user.avatarUrl = filePath;
+    }
+
     await this.userRepo.getEntityManager().flush();
+
     return user;
   }
 
