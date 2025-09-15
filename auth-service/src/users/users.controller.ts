@@ -56,7 +56,7 @@ export class UsersController {
       ]
     })
   ) avatar?: Express.Multer.File) {
-    return this.usersService.update(+id, updateUserDto);
+    return this.usersService.update(+id, updateUserDto, avatar);
   }
 
   @Delete(':id')

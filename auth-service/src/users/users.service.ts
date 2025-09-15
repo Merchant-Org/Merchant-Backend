@@ -50,11 +50,22 @@ export class UsersService {
     return this.userRepo.findOne({ id });
   }
 
-  async update(id: number, updateUserDto: UpdateUserDto) {
+  async update(id: number, updateUserDto: UpdateUserDto, avatar?: Express.Multer.File) {
     const user = await this.userRepo.findOneOrFail(id);
-    this.userRepo.assign({ id }, updateUserDto);
+    this.userRepo.assign(user, updateUserDto);
     if (updateUserDto.password)
       user.password = await this.hashPassword(updateUserDto.password);
+
+    if (avatar) {
+      const filePath = user.avatarUrl || `avatar/${Date.now()}-${Math.round(Math.random() * 1e9)}.${extname(avatar.originalname)}`;
+      this.fileStorageService.uploadFile({
+        content: avatar.buffer,
+        filePath: filePath
+      });
+
+      user.avatarUrl = filePath;
+    }
+
     await this.userRepo.getEntityManager().flush();
     return user;
   }
