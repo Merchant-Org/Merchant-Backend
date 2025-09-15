@@ -2,10 +2,13 @@ import {
   BaseEntity,
   Entity,
   Enum,
+  ManyToMany,
   PrimaryKey,
   Property,
 } from '@mikro-orm/core';
 import { UserStatus } from './user-status.enum';
+import { Role } from '../../access-control/entities/role.entity';
+
 
 @Entity()
 export class User extends BaseEntity {
@@ -43,4 +46,7 @@ export class User extends BaseEntity {
     onUpdate: () => new Date(),
   })
   updatedAt: Date = new Date();
+
+  @ManyToMany(() => Role, role => role.users, { owner: true })
+  roles: Role[];
 }

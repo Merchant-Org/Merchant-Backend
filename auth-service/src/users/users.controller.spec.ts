@@ -23,10 +23,16 @@ const mockUser: User = {
   password: 'hashedpassword',
   status: UserStatus.Active,
   createdAt: new Date(),
-  updatedAt: new Date(),
-  hashPassword: jest.fn().mockResolvedValue(undefined),
-  checkPassword: jest.fn().mockResolvedValue(true),
-} as unknown as User;
+  updatedAt: new Date()
+} as User;
+
+const mockAvatarFile: Express.Multer.File = {
+  fieldname: 'avatar',
+  originalname: 'avatar.jpg',
+  mimetype: 'image/jpeg',
+  buffer: Buffer.from('test file content'),
+  size: 12345,
+} as Express.Multer.File;
 
 describe('UsersController', () => {
   let controller: UsersController;
@@ -56,20 +62,30 @@ describe('UsersController', () => {
   });
 
   describe('create', () => {
-    it('should create a user', async () => {
-      const createUserDto: CreateUserDto = {
-        firstName: 'Test',
-        lastName: 'User',
-        username: 'testuser',
-        email: 'test@example.com',
-        password: 'password123',
-        status: UserStatus.Active,
-      };
+    const createUserDto: CreateUserDto = {
+      firstName: 'Test',
+      lastName: 'User',
+      username: 'testuser',
+      email: 'test@example.com',
+      password: 'password123',
+      status: UserStatus.Active,
+    };
+
+    it('should create a user without an avatar', async () => {
       mockUsersService.create.mockResolvedValue(mockUser);
 
-      const result = await controller.create(createUserDto);
+      const result = await controller.create(createUserDto, undefined);
 
-      expect(service.create).toHaveBeenCalledWith(createUserDto);
+      expect(service.create).toHaveBeenCalledWith(createUserDto, undefined);
+      expect(result).toEqual(mockUser);
+    });
+
+    it('should create a user with an avatar', async () => {
+      mockUsersService.create.mockResolvedValue(mockUser);
+
+      const result = await controller.create(createUserDto, mockAvatarFile);
+
+      expect(service.create).toHaveBeenCalledWith(createUserDto, mockAvatarFile);
       expect(result).toEqual(mockUser);
     });
   });
@@ -98,14 +114,25 @@ describe('UsersController', () => {
   });
 
   describe('update', () => {
-    it('should update a user', async () => {
-      const updateUserDto: UpdateUserDto = { username: 'updateduser' };
+    const updateUserDto: UpdateUserDto = { username: 'updateduser' };
+
+    it('should update a user without an avatar', async () => {
       const updatedUser = { ...mockUser, ...updateUserDto };
       mockUsersService.update.mockResolvedValue(updatedUser);
 
-      const result = await controller.update('1', updateUserDto);
+      const result = await controller.update('1', updateUserDto, undefined);
 
-      expect(service.update).toHaveBeenCalledWith(1, updateUserDto);
+      expect(service.update).toHaveBeenCalledWith(1, updateUserDto, undefined);
+      expect(result).toEqual(updatedUser);
+    });
+
+    it('should update a user with an avatar', async () => {
+      const updatedUser = { ...mockUser, ...updateUserDto };
+      mockUsersService.update.mockResolvedValue(updatedUser);
+
+      const result = await controller.update('1', updateUserDto, mockAvatarFile);
+
+      expect(service.update).toHaveBeenCalledWith(1, updateUserDto, mockAvatarFile);
       expect(result).toEqual(updatedUser);
     });
   });
