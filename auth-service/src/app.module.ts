@@ -5,9 +5,13 @@ import { UsersModule } from './users/users.module';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { AuthModule } from './auth/auth.module';
 import mikroOrmConfig from './mikro-orm.config';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
-  imports: [MikroOrmModule.forRoot(mikroOrmConfig), UsersModule, AuthModule],
+  imports: [ConfigModule.forRoot({isGlobal: true, envFilePath: '../.env'}),
+     MikroOrmModule.forRoot(mikroOrmConfig), 
+     UsersModule, 
+     AuthModule],
   controllers: [AppController],
   providers: [AppService],
 })
