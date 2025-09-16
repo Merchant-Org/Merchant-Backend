@@ -4,7 +4,7 @@ import { UsersController } from './users.controller';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { User } from './entities/user.entity';
 import { FileStorageModule } from '@getlarge/nestjs-tools-file-storage';
-import fileStorageConfig from '../storage.config';
+import fileStorageConfig from '../../storage.config';
 
 
 @Module({
