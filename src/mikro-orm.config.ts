@@ -4,7 +4,8 @@ import { MikroOrmModuleOptions } from '@mikro-orm/nestjs';
 const config: MikroOrmModuleOptions = {
   driver: SqliteDriver,
   dbName: 'test.sqlite3',
-  entities: ['src/**/*.entity.ts'],
+  entities: ['dist/**/*.entity.js'],
+  entitiesTs: ['src/**/*.entity.ts'],
   debug: true,
 };
 

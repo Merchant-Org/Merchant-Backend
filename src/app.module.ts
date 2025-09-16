@@ -9,9 +9,10 @@ import { MikroOrmModule } from '@mikro-orm/nestjs';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({isGlobal: true, envFilePath: '../.env'}),
+    ConfigModule.forRoot({isGlobal: true, envFilePath: './.env'}),
     MikroOrmModule.forRoot(mikroOrmConfig),
-    IdentityModule],
+    IdentityModule
+  ],
   controllers: [AppController],
   providers: [AppService],
 })

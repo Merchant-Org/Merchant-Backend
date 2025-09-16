@@ -27,7 +27,7 @@ export class AuthService {
         status: UserStatus.Active,
         createdAt: new Date(),
         updatedAt: new Date(),
-    });
+    }, { partial: true });
 
     await this.em.persistAndFlush(user);
     return user;
