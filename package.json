@@ -18,7 +18,8 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "nest:tree": "node scripts/module-tree.js"
+    "nest:tree": "node scripts/module-tree.js",
+    "nest:repl": "npm run start -- --entryFile repl"
   },
   "dependencies": {
     "@getlarge/nestjs-tools-file-storage": "^1.4.2",
