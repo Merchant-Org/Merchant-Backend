@@ -1,4 +1,5 @@
 import { FileStorageLocal, FileStorageLocalSetup, FileStorageModuleAsyncOptions } from '@getlarge/nestjs-tools-file-storage';
+import * as dotenv from 'dotenv';
 
 
 const config: FileStorageModuleAsyncOptions = {
