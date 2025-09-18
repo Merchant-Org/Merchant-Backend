@@ -14,7 +14,7 @@ export class StoreService {
     ) {}
 
     async createStore(name: string, description?: string) {
-        const store = this.storeRepo.create({ name, description });
+        const store = this.storeRepo.create({ name, description }, { partial: true });
         await this.storeRepo.getEntityManager().flush();
         return store;
     }

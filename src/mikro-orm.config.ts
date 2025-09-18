@@ -18,6 +18,7 @@ const config: MikroOrmModuleOptions = {
   entities: ['dist/**/*.entity.js'],
   entitiesTs: ['src/**/*.entity.ts'],
   debug: isDebug,
+  allowGlobalContext: true,
 };
 
 export default config;
