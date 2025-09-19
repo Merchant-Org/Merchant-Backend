@@ -11,8 +11,8 @@ export class TiersController {
     }
 
     @Post("tiers")
-    createTiers(@Body() body: { storeID: number, tierId: number }) {
-        return this.tiersService.createTiers(body.storeID, body.tierId);
+    subscribe(@Body() body: { storeID: number, tierId: number }) {
+        return this.tiersService.subscribe(body.storeID, body.tierId);
     }
 }
 

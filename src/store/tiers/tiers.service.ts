@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { EntityRepository } from '@mikro-orm/core';
 import { Tier } from './entities/tier.entity';
-import { StoreTier } from './entities/store-tier.entity';
 import { Store } from '../entities/store.entity';
 
 
@@ -13,9 +12,6 @@ export class TiersService {
         private readonly tierRepo: EntityRepository<Tier>,
         @InjectRepository(Store)
         private readonly storeRepo: EntityRepository<Store>,
-        @InjectRepository(StoreTier)
-        private readonly storeTierRepo: EntityRepository<StoreTier>,
-
     ) {}
 
     async getTiers() {
@@ -26,10 +22,9 @@ export class TiersService {
         const tier = await this.tierRepo.findOneOrFail(tierID);
         const store = await this.storeRepo.findOneOrFail(storeID);
 
-        const sub = this.storeTierRepo.create({ store, tier });
-        await this.storeTierRepo.getEntityManager().flush();
+        tier.stores.push(store);
 
-        return sub;
+        await this.tierRepo.getEntityManager().flush();
     }
 }
 
