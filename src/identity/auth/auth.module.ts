@@ -5,9 +5,10 @@ import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './jwt.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
 import { ConfigService } from '@nestjs/config';
+import { UsersModule } from '../users/users.module';
 
 @Module({
-  imports: [
+  imports: [UsersModule,
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({

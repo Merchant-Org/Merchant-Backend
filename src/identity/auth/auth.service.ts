@@ -3,33 +3,16 @@ import { EntityManager } from '@mikro-orm/sqlite';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { User } from '../users/entities/user.entity';
-import { UserStatus } from '../users/entities/user-status.enum';
-import { RegisterDto } from './dto/register.dto';
-import { LoginDto } from './dto/login.dto';
 import { LoginResponseDto } from './dto/login-response.dto';
+import { UsersService } from '../users/users.service';
+import { CreateUserDto } from '../users/dto/create-user.dto';
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly em: EntityManager, private readonly jwtService: JwtService) {}
+  constructor(private readonly em: EntityManager, private readonly jwtService: JwtService, private readonly usersService: UsersService) {}
 
-  async register(data: RegisterDto): Promise<User> {
-    const exists = await this.em.findOne(User, { username: data.username });
-    if (exists) {
-      throw new BadRequestException('User already exists');
-    }
-
-    const hashed = await bcrypt.hash(data.password, 10);
-    const user = this.em.create(User, {
-        firstName: data.firstName,
-        lastName: data.lastName,
-        username: data.username,
-        password: hashed,
-        status: UserStatus.Active,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-    }, { partial: true });
-
-    await this.em.persistAndFlush(user);
+  async register(data: CreateUserDto): Promise<User> {
+    const user = await this.usersService.create(data);
     return user;
   }
 

@@ -14,5 +14,6 @@ import fileStorageConfig from '../../storage.config';
   ],
   controllers: [UsersController],
   providers: [UsersService],
+  exports: [UsersService],
 })
 export class UsersModule {}
